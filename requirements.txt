@@ -1,0 +1,6 @@
+langchain-groq
+langchain-mcp-adapters
+langgraph
+langchain
+mcp
+mcp[cli]
