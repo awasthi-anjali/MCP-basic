@@ -1,206 +1,107 @@
-# MCP Multi-Tool Agent (Math + Weather)
+# MCP Multi-Server Agent (Math + Weather)
 
 ## Overview
 
-This project demonstrates how to build an **Agentic AI system using the Model Context Protocol (MCP)**.
-The agent dynamically connects to multiple MCP servers and uses their tools to answer user queries.
+This project demonstrates how to build an **Agentic AI system using the Model Context Protocol (MCP)**. The agent connects to multiple MCP servers and dynamically discovers and uses their tools to respond to user queries.
 
-In this project, the agent connects to:
+The system integrates a **Math MCP Server** and a **Weather MCP Server**, allowing the agent to perform arithmetic operations and retrieve weather information based on the user's request.
 
-* **Math MCP Server** (local process via `stdio`)
-* **Weather MCP Server** (HTTP via `streamable-http`)
-
-The agent automatically selects the correct tool based on the user's request.
+The agent is built using **LangChain**, **Groq LLM**, and **MCP adapters**, enabling seamless communication between the AI model and external tool servers.
 
 ---
 
-# Architecture
+## Architecture
+
+The system follows a multi-server MCP architecture where the AI agent interacts with external tools through MCP servers.
 
 ```
 User Query
     │
     ▼
-LangChain Agent (LLM)
+AI Agent (LLM)
     │
-    ├── Math MCP Server (stdio)
-    │        ├── add
-    │        ├── subtract
-    │        └── multiply
+    ├── Math MCP Server (Local - stdio)
+    │       • Add numbers
+    │       • Subtract numbers
+    │       • Multiply numbers
     │
-    └── Weather MCP Server (HTTP)
-             └── get_weather
+    └── Weather MCP Server (HTTP - streamable transport)
+            • Retrieve weather information
 ```
 
-The agent retrieves tools from MCP servers dynamically and invokes them when required.
+The agent automatically selects and invokes the appropriate tool depending on the user's request.
 
 ---
 
-# Project Structure
+## Key Features
 
-```
-project/
-│
-├── mathserver.py
-├── weather.py
-├── client.py
-├── .env
-└── README.md
-```
+* Multi-server MCP integration
+* Dynamic tool discovery from MCP servers
+* AI agent capable of tool-based reasoning
+* Support for both **stdio** and **HTTP MCP transports**
+* Integration with **Groq LLM** for fast inference
+* Built using **LangChain agents**
 
 ---
 
-# Math MCP Server
+## MCP Servers Used
 
-The math server exposes basic arithmetic tools.
+### Math MCP Server
 
-```python
-from mcp.server.fastmcp import FastMCP
+Provides arithmetic tools that allow the agent to perform mathematical operations.
 
-mcp = FastMCP("Math")
+### Weather MCP Server
 
-@mcp.tool()
-def add(a:int,b:int)->int:
-    """Add two numbers"""
-    return a+b
-
-@mcp.tool()
-def subtract(a:int,b:int)->int:
-    """Subtract two numbers"""
-    return a-b
-
-@mcp.tool()
-def multiply(a:int,b:int)->int:
-    """Multiply two numbers"""
-    return a*b
-
-if __name__ == "__main__":
-    mcp.run(transport="stdio")
-```
-
-This server communicates using **standard input/output**, allowing the agent to run it as a subprocess.
+Provides weather information for a given city through an MCP-accessible tool.
 
 ---
 
-# Weather MCP Server
+## Technologies Used
 
-The weather server provides weather information for a given city.
-
-```python
-from mcp.server.fastmcp import FastMCP
-
-mcp = FastMCP("Weather")
-
-@mcp.tool()
-def get_weather(city:str)->str:
-    """Get the weather for a given city"""
-    return f"The weather in {city} is sunny"
-
-if __name__=="__main__":
-    mcp.run(transport="streamable-http")
-```
-
-This server runs over **HTTP**, enabling remote MCP tool access.
+* **Model Context Protocol (MCP)**
+* **LangChain**
+* **LangChain MCP Adapters**
+* **Groq LLM**
+* **Python**
+* **Asyncio**
 
 ---
 
-# Agent Client
+## How the System Works
 
-The client connects to multiple MCP servers and creates an AI agent.
-
-```python
-client = MultiServerMCPClient({
-    "math":{
-        "command":"python",
-        "args":["mathserver.py"],
-        "transport":"stdio"
-    },
-    "weather":{
-        "url":"http://localhost:8000/mcp",
-        "transport":"streamable-http"
-    }
-})
-```
-
-The agent retrieves tools from both servers and uses them to answer questions.
+1. The agent receives a user query.
+2. The agent analyzes whether the task requires a tool.
+3. Available tools are fetched dynamically from MCP servers.
+4. The agent invokes the appropriate tool.
+5. The result is returned to the user.
 
 ---
 
-# Running the Project
-
-## 1 Install dependencies
+## Example Queries
 
 ```
-pip install mcp langchain langchain-mcp-adapters langchain-groq python-dotenv
+What is 5 * 100 + 200?
 ```
+
+```
+What is the weather in California?
+```
+
+The agent determines whether the query requires the **Math tool** or **Weather tool** and executes it accordingly.
 
 ---
 
-## 2 Set API Key
+## Learning Outcomes
 
-Create a `.env` file:
+This project demonstrates important concepts in **Agentic AI systems**:
 
-```
-GROQ_API_KEY=your_api_key
-```
-
----
-
-## 3 Start Weather Server
-
-```
-python weather.py
-```
-
----
-
-## 4 Run the Agent
-
-```
-python client.py
-```
-
----
-
-# Example Output
-
-```
-Math Response: 700
-Weather Response: The weather in California is sunny
-```
-
----
-
-# Key Concepts Demonstrated
-
-* Model Context Protocol (MCP)
+* Tool-based reasoning with LLM agents
 * Multi-server MCP architecture
-* Tool discovery from MCP servers
-* Agent tool invocation
-* stdio vs HTTP MCP transports
-* LangChain agent integration
+* Integration of external tools with AI agents
+* Asynchronous agent workflows
 
 ---
 
-# Why MCP?
+## Author
 
-MCP allows AI systems to **connect to external tools in a standardized way**, enabling:
-
-* Tool discovery
-* Secure tool execution
-* Modular AI architectures
-* Multi-agent workflows
-
----
-
-# Future Improvements
-
-* Integrate real weather APIs
-* Add database MCP server
-* Add web search tools
-* Deploy MCP servers to cloud
-
----
-
-# Author
-
-Built as part of exploring **Agentic AI and MCP-based tool ecosystems**.
+This project was built as part of learning and experimenting with **Agentic AI, MCP-based tool ecosystems, and LangChain agents**.
